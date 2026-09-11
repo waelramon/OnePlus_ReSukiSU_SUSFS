@@ -1025,13 +1025,13 @@ runs:
         cd "$KERNEL_PLATFORM_FOLDER"
         echo "Adding ReSukiSU..."
         
-        if [ "${{ inputs.ksu_branch_or_hash }}" = "" ]; then
-          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -
-        else
-          curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s "${{ inputs.ksu_branch_or_hash }}"
-        fi
+        ##if [ "${{ inputs.ksu_branch_or_hash }}" = "" ]; then
+        ##  curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -
+        ##else
+        ##  curl --fail --location --proto '=https' -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s "${{ inputs.ksu_branch_or_hash }}"
+        ##fi
         
-        cd KernelSU
+        ##cd KernelSU
         
         BASE_VERSION=30700
         KSU_VERSION=$(expr $(/usr/bin/git rev-list --count HEAD) "+" $BASE_VERSION)
@@ -1039,7 +1039,10 @@ runs:
         KSU_COMMIT_SHA=$(git rev-parse HEAD)
         echo "KSU_COMMIT_SHA=$KSU_COMMIT_SHA" >> $GITHUB_ENV
         
-        cd ..
+        ##cd ..
+
+        # NoMount Built-in Integration
+        curl https://raw.githubusercontent.com/maxsteeel/nomount/refs/heads/dev/kernel/setup.sh | bash -
         
         echo "ReSukiSU" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
         echo "$KSU_VERSION" >> "${ARTIFACTS_FOLDER}/${OP_MODEL}_${OP_OS_VERSION}.txt"
@@ -1788,12 +1791,12 @@ runs:
           find . -name "*.rej" -exec echo "=== {} ===" \; -exec cat {} \;
           exit 1
         fi
-        echo "Patching force_tcp_nodelay.patch"
-        if ! patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/force_tcp_nodelay.patch"; then
-          echo "::error::force_tcp_nodelay patch failed. Dumping all .rej files:"
-          find . -name "*.rej" -exec echo "=== {} ===" \; -exec cat {} \;
-          exit 1
-        fi
+        #echo "Patching force_tcp_nodelay.patch"
+        #if ! patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/force_tcp_nodelay.patch"; then
+        #  echo "::error::force_tcp_nodelay patch failed. Dumping all .rej files:"
+        #  find . -name "*.rej" -exec echo "=== {} ===" \; -exec cat {} \;
+        #  exit 1
+        #fi
         echo "Patching reduce_gc_thread_sleep_time.patch"
         if ! patch -p1 --forward < "$KERNEL_PATCHES_FOLDER/common/reduce_gc_thread_sleep_time.patch"; then
           echo "::error::reduce_gc_thread_sleep_time patch failed. Dumping all .rej files:"
@@ -2037,7 +2040,11 @@ runs:
         CONFIG_TCP_CONG_BBR=y
         CONFIG_NET_SCH_FQ=y
         CONFIG_NET_SCH_FQ_CODEL=y
+        CONFIG_TCP_CONG_BBR3=y
         EOF
+        #patch -p1 < "$KERNEL_PATCHES_FOLDER/common/bbrv3/0001-net-tcp-backport-BBRv3-to-$ANDROID_VER-$KERNEL_VER.patch"
+        cd "$COMMON_KERNEL_FOLDER"
+        patch -p1 < "$KERNEL_PATCHES_FOLDER/common/bbrv3/0001-net-tcp-backport-BBRv3-to-$ANDROID_VER-$KERNEL_VER.patch"
 
     - name: Add TTL Target Support
       if: ${{ env.OP_TTL == 'true' }}
